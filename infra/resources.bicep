@@ -59,21 +59,6 @@ resource gpt4o 'Microsoft.CognitiveServices/accounts/deployments@2023-05-01' = {
   }
 }
 
-// 4. Azure AI Anomaly Detector (Challenge 1, 2, 3, 4 telemetry anomalies)
-resource anomalyDetector 'Microsoft.CognitiveServices/accounts@2023-05-01' = {
-  name: 'anomaly-${resourceToken}'
-  location: location
-  kind: 'AnomalyDetector'
-  sku: {
-    name: 'S0'
-  }
-  properties: {
-    customSubDomainName: 'anomaly-${resourceToken}'
-    publicNetworkAccess: 'Enabled'
-  }
-  tags: tags
-}
-
 // 5. Azure Static Web App (hosts the glassmorphic operations dashboard)
 // Tagged with azd-service-name to bind SWA to the azd service
 resource staticWebApp 'Microsoft.Web/staticSites@2022-03-01' = {
@@ -93,4 +78,3 @@ resource staticWebApp 'Microsoft.Web/staticSites@2022-03-01' = {
 output AZURE_STATIC_WEB_APP_URL string = staticWebApp.properties.defaultHostname
 output AZURE_STATIC_WEB_APP_NAME string = staticWebApp.name
 output AZURE_OPENAI_ENDPOINT string = openAi.properties.endpoint
-output AZURE_ANOMALY_DETECTOR_ENDPOINT string = anomalyDetector.properties.endpoint
