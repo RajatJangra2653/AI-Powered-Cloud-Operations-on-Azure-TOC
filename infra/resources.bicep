@@ -42,19 +42,19 @@ resource openAi 'Microsoft.CognitiveServices/accounts@2023-05-01' = {
   tags: tags
 }
 
-// Model deployment - gpt-4o (standard engine)
-resource gpt4o 'Microsoft.CognitiveServices/accounts/deployments@2023-05-01' = {
+// Model deployment - gpt-5-mini (standard engine)
+resource gpt5Mini 'Microsoft.CognitiveServices/accounts/deployments@2023-05-01' = {
   parent: openAi
-  name: 'gpt-4o'
+  name: 'gpt-5-mini'
+  sku: {
+    name: 'Standard'
+    capacity: 10
+  }
   properties: {
     model: {
       format: 'OpenAI'
-      name: 'gpt-4o'
-      version: '2024-05-13'
-    }
-    scaleSettings: {
-      scaleType: 'Standard'
-      capacity: 10
+      name: 'gpt-5-mini'
+      version: 'preview'
     }
   }
 }
