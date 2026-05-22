@@ -7,18 +7,35 @@ targetScope = 'resourceGroup'
 param environmentName string
 
 @description('Primary location for all resources. Region must support Azure OpenAI (e.g. eastus2, swedencentral).')
-param location string = resourceGroup().location
+param location string = ''
+
+@description('Name of the resource group (automatically filled by azd if deploying to existing group).')
+param resourceGroupName string = ''
 
 // CAF naming conventions loading
 var abbreviations = loadJsonContent('./abbreviations.json')
-var resourceToken = toLower(uniqueString(resourceGroup().id, environmentName, location))
+
+// Define supported regions that support both Azure Static Web Apps and Azure OpenAI (gpt-4o)
+var supportedLocations = [
+  'eastus2'
+  'swedencentral'
+  'westeurope'
+  'centralus'
+  'eastasia'
+]
+
+// Fallback to eastus2 if the resource group location or selected location is not supported
+var requestedLocation = empty(location) ? resourceGroup().location : location
+var actualLocation = contains(supportedLocations, toLower(requestedLocation)) ? requestedLocation : 'eastus2'
+
+var resourceToken = toLower(uniqueString(resourceGroup().id, environmentName, actualLocation))
 var tags = { 'azd-env-name': environmentName }
 
 // Orchestrate the services directly in current resource group scope
 module resources './resources.bicep' = {
   name: 'resources-deployment'
   params: {
-    location: location
+    location: actualLocation
     resourceToken: resourceToken
     abbreviations: abbreviations
     tags: tags
