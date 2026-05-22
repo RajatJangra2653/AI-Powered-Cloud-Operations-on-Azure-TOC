@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CloudOps AI: Intelligent Cloud Operations & Insights Portal</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Lucide Icons CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/lucide/dist/umd/lucide.js"></script>
+    <!-- Styling -->
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="brand">
+                <i data-lucide="cloud-lightning" class="brand-icon"></i>
+                <div class="brand-text">
+                    <h1>CloudOps AI</h1>
+                    <span>Azure Operations Portal</span>
+                </div>
+            </div>
+            
+            <nav class="nav-menu">
+                <button class="nav-item active" data-tab="dashboard">
+                    <i data-lucide="layout-dashboard"></i>
+                    <span>Dashboard Overview</span>
+                </button>
+                <button class="nav-item" data-tab="performance">
+                    <i data-lucide="gauge"></i>
+                    <span>Performance (C1)</span>
+                </button>
+                <button class="nav-item" data-tab="reliability">
+                    <i data-lucide="server"></i>
+                    <span>Reliability (C2)</span>
+                </button>
+                <button class="nav-item" data-tab="security">
+                    <i data-lucide="shield-alert"></i>
+                    <span>Security Posture (C3)</span>
+                </button>
+                <button class="nav-item" data-tab="cost">
+                    <i data-lucide="coins"></i>
+                    <span>Cost Optimizer (C4)</span>
+                </button>
+                <button class="nav-item" data-tab="forecasting">
+                    <i data-lucide="trending-up"></i>
+                    <span>Forecasting (C5)</span>
+                </button>
+                <button class="nav-item" data-tab="copilot">
+                    <i data-lucide="sparkles"></i>
+                    <span>Azure Copilot (C6)</span>
+                </button>
+            </nav>
+
+            <div class="system-status-panel">
+                <div class="status-header">
+                    <span>ENVIRONMENT HEALTH</span>
+                    <span class="health-badge healthy" id="env-health-badge">Healthy</span>
+                </div>
+                <div class="status-row">
+                    <span>Active Incidents:</span>
+                    <span class="status-val text-green" id="active-incidents-count">0</span>
+                </div>
+                <div class="status-row">
+                    <span>Region:</span>
+                    <span class="status-val text-gray">eastus2</span>
+                </div>
+                <div class="status-row">
+                    <span>Resource Group:</span>
+                    <span class="status-val text-gray font-mono">ai-ops-demo</span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <!-- Top Header -->
+            <header class="top-header">
+                <div class="header-left">
+                    <h2 id="current-tab-title">Dashboard Overview</h2>
+                    <p id="current-tab-subtitle">Real-time Azure operations, security, and cost telemetry.</p>
+                </div>
+                <div class="header-right">
+                    <div class="active-incident-banner" id="active-incident-banner" style="display: none;">
+                        <i data-lucide="alert-triangle"></i>
+                        <span id="active-incident-msg">Performance degradation detected!</span>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Dashboard Tab View -->
+            <section class="tab-view active" id="tab-dashboard">
+                <!-- Status Cards Grid -->
+                <div class="metrics-grid">
+                    <div class="metric-card glass-card">
+                        <div class="card-header">
+                            <h3>Response Time</h3>
+                            <i data-lucide="zap" class="text-cyan"></i>
+                        </div>
+                        <div class="card-value" id="dash-latency-val">124 ms</div>
+                        <div class="card-footer">
+                            <span class="text-green"><i data-lucide="arrow-down-right"></i> -2.4% vs last hour</span>
+                        </div>
+                    </div>
+                    <div class="metric-card glass-card">
+                        <div class="card-header">
+                            <h3>SQL DB CPU / DTU</h3>
+                            <i data-lucide="database" class="text-purple"></i>
+                        </div>
+                        <div class="card-value" id="dash-dtu-val">28%</div>
+                        <div class="card-footer">
+                            <span class="text-green"><i data-lucide="activity"></i> Standard limits healthy</span>
+                        </div>
+                    </div>
+                    <div class="metric-card glass-card">
+                        <div class="card-header">
+                            <h3>Sentinel Incidents</h3>
+                            <i data-lucide="shield-check" class="text-green" id="dash-security-icon"></i>
+                        </div>
+                        <div class="card-value" id="dash-security-val">0</div>
+                        <div class="card-footer">
+                            <span class="text-green" id="dash-security-desc">No active security alerts</span>
+                        </div>
+                    </div>
+                    <div class="metric-card glass-card">
+                        <div class="card-header">
+                            <h3>Accumulated Cost</h3>
+                            <i data-lucide="banknote" class="text-amber"></i>
+                        </div>
+                        <div class="card-value">$412.80</div>
+                        <div class="card-footer">
+                            <span class="text-amber"><i data-lucide="alert-circle"></i> On track to budget</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Main Grid Charts & Logs -->
+                <div class="dashboard-grid">
+                    <!-- Performance Trend -->
+                    <div class="glass-card chart-container span-two">
+                        <div class="card-title-bar">
+                            <h4>Operations & Performance Trend</h4>
+                            <span class="badge" id="latency-trend-badge">Standard Baseline</span>
+                        </div>
+                        <div class="chart-wrapper">
+                            <canvas id="dashboardPerformanceChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Copilot Assistant Mini -->
+                    <div class="glass-card copilot-mini">
+                        <div class="card-title-bar">
+                            <h4><i data-lucide="sparkles" class="text-purple"></i> Azure Copilot Assistant</h4>
+                        </div>
+                        <div class="copilot-mini-body">
+                            <div class="avatar-message">
+                                <div class="avatar"><i data-lucide="bot"></i></div>
+                                <div class="bubble">
+                                    I am analyzing the operations logs. Currently, all systems are **Healthy**. Click on the **Incident Simulator** to test anomalies, or ask me directly about cost, performance, and security.
+                                </div>
+                            </div>
+                            <div class="quick-questions">
+                                <h5>Quick Questions:</h5>
+                                <button class="quick-q-btn" data-query="Explain root cause of latency degradation">What caused the latency spike?</button>
+                                <button class="quick-q-btn" data-query="Identify overprivileged RBAC identities">Show security posture anomalies</button>
+                                <button class="quick-q-btn" data-query="Analyze cost drivers and cleanup orphaned resources">Analyze cost drivers & cleanup</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Performance (C1) Tab View -->
+            <section class="tab-view" id="tab-performance">
+                <div class="tab-grid-two">
+                    <div class="glass-card chart-container">
+                        <div class="card-title-bar">
+                            <h4>Telemetry Streams: CPU, Dependency & Responses</h4>
+                            <span class="badge" id="c1-telemetry-badge">Real-Time</span>
+                        </div>
+                        <div class="chart-wrapper">
+                            <canvas id="c1PerformanceChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="glass-card content-panel">
+                        <div class="panel-header">
+                            <h4>Challenge 01: Latency Trends & Anomalies</h4>
+                        </div>
+                        <div class="panel-body text-gray">
+                            <p>This view demonstrates the correlation between application response times and external dependency delays (such as database queries and API response times).</p>
+                            
+                            <div class="anomaly-detector-result glass-box mt-4" id="c1-anomaly-panel">
+                                <div class="status-row">
+                                    <strong>AI Anomaly Detector API Status:</strong>
+                                    <span class="badge healthy" id="c1-anomaly-status">NO ANOMALIES DETECTED</span>
+                                </div>
+                                <p class="mt-2 text-sm">Azure AI Anomaly Detector is analyzing the streaming request duration payload automatically using dynamic regression models.</p>
+                            </div>
+
+                            <div class="log-preview mt-4">
+                                <h5>Telemetry Stream Logs (Application Insights):</h5>
+                                <pre class="code-block" id="c1-logs-console">
+[2026-05-22 12:40:01] INFO  GET /api/orders/list - Duration 112ms - DB Response 28ms - CPU 12%
+[2026-05-22 12:40:05] INFO  GET /api/inventory/status - Duration 89ms - DB Response 14ms - CPU 9%
+[2026-05-22 12:40:10] INFO  POST /api/checkout/cart - Duration 242ms - DB Response 98ms - CPU 15%
+[2026-05-22 12:40:15] INFO  GET /api/user/profile - Duration 104ms - DB Response 18ms - CPU 10%</pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Reliability (C2) Tab View -->
+            <section class="tab-view" id="tab-reliability">
+                <div class="tab-grid-two">
+                    <div class="glass-card chart-container">
+                        <div class="card-title-bar">
+                            <h4>Infrastructure Metrics: Web VM CPU vs. SQL Database DTU</h4>
+                        </div>
+                        <div class="chart-wrapper">
+                            <canvas id="c2ReliabilityChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="glass-card content-panel">
+                        <div class="panel-header">
+                            <h4>Challenge 02: Infrastructure Reliability & Memory Leaks</h4>
+                        </div>
+                        <div class="panel-body text-gray">
+                            <p>Here we correlate system metrics across the application stack to identify how backend spikes impact frontend nodes, and detect memory leaks before they lead to VM crashes.</p>
+                            
+                            <div class="glass-box mt-4" id="c2-observability-panel">
+                                <div class="status-row">
+                                    <strong>Dynamic Threshold Alerts:</strong>
+                                    <span class="badge healthy" id="c2-alert-status">ACTIVE MONITORING</span>
+                                </div>
+                                <p class="mt-2 text-sm">Dynamic alerts analyze the historical memory bounds. In a memory leak state, memory increases gradually while CPU remains steady, indicating a leakage pattern.</p>
+                            </div>
+
+                            <div class="metrics-comparison mt-4">
+                                <h5>Core System Health Indicators:</h5>
+                                <div class="comp-bar-row">
+                                    <div class="comp-label">Virtual Machine CPU Util.</div>
+                                    <div class="progress-container"><div class="progress-bar bg-cyan" style="width: 14%" id="vm-cpu-progress"></div></div>
+                                    <div class="comp-val" id="vm-cpu-text">14%</div>
+                                </div>
+                                <div class="comp-bar-row mt-2">
+                                    <div class="comp-label">SQL Database DTU Level</div>
+                                    <div class="progress-container"><div class="progress-bar bg-purple" style="width: 28%" id="sql-dtu-progress"></div></div>
+                                    <div class="comp-val" id="sql-dtu-text">28%</div>
+                                </div>
+                                <div class="comp-bar-row mt-2">
+                                    <div class="comp-label">Virtual Machine Memory Leakage</div>
+                                    <div class="progress-container"><div class="progress-bar bg-amber" style="width: 45%" id="vm-mem-progress"></div></div>
+                                    <div class="comp-val" id="vm-mem-text">45%</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Security Posture (C3) Tab View -->
+            <section class="tab-view" id="tab-security">
+                <div class="tab-grid-two">
+                    <div class="glass-card content-panel">
+                        <div class="panel-header">
+                            <h4>Challenge 03: Actionable Security Visibility</h4>
+                        </div>
+                        <div class="panel-body text-gray">
+                            <p>Simulating Sentinel log analysis of abnormal sign-ins (`SigninLogs`) and administrative modifications (`AzureActivity`).</p>
+                            
+                            <div class="glass-box mt-4" id="c3-alert-box">
+                                <div class="status-row">
+                                    <strong>Microsoft Sentinel Incident:</strong>
+                                    <span class="badge healthy" id="c3-sentinel-status">0 INCIDENTS TRIGGERED</span>
+                                </div>
+                                <p class="mt-2 text-sm text-white" id="c3-incident-detail">All sign-ins and identity operations align with geographical baselines and standard RBAC privileges.</p>
+                            </div>
+
+                            <div class="identity-table-container mt-4">
+                                <h5>Active Identity & Privilege Monitor:</h5>
+                                <table class="custom-table mt-2">
+                                    <thead>
+                                        <tr>
+                                            <th>Identity</th>
+                                            <th>Assigned Role</th>
+                                            <th>Recent Operation</th>
+                                            <th>Location Risk</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="security-table-body">
+                                        <tr>
+                                            <td class="font-mono">devops-deployer-sp</td>
+                                            <td><span class="role-badge contributor">Contributor</span></td>
+                                            <td>Update AppServiceSettings</td>
+                                            <td class="text-green"><i data-lucide="check-circle" class="sm-icon"></i> Low (Virginia, US)</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="font-mono">sec-auditor-sa</td>
+                                            <td><span class="role-badge reader">Reader</span></td>
+                                            <td>Read KeyVault Secrets</td>
+                                            <td class="text-green"><i data-lucide="check-circle" class="sm-icon"></i> Low (San Jose, US)</td>
+                                        </tr>
+                                        <tr id="suspicious-security-row" style="display: none;">
+                                            <td class="font-mono text-red">john.doe@company.com</td>
+                                            <td><span class="role-badge owner">Owner (Over-Privileged)</span></td>
+                                            <td class="text-red font-semibold">Write RBAC Access Policies</td>
+                                            <td class="text-red font-semibold"><i data-lucide="alert-octagon" class="sm-icon"></i> Critical (Stockholm, SE)</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="glass-card content-panel">
+                        <div class="panel-header">
+                            <h4>Least-Privilege AI Recommendations (GPT-4o)</h4>
+                        </div>
+                        <div class="panel-body">
+                            <div class="remediation-recom glass-box" id="security-recom-box">
+                                <i data-lucide="check-shield" class="recom-icon text-green" id="security-recom-icon"></i>
+                                <div id="security-recom-text">
+                                    <h5>All Identities Fully Compliant</h5>
+                                    <p class="text-sm mt-1 text-gray">Azure OpenAI reviewed the activity logs against RBAC maps. Current permissions represent the minimum privileges required for continuous operation.</p>
+                                </div>
+                            </div>
+                            
+                            <div class="log-preview mt-4">
+                                <h5>Audit Log Snippets (AzureActivity & SigninLogs):</h5>
+                                <pre class="code-block" id="c3-logs-console">
+[2026-05-22 11:15:30] SigninLogs - devops-deployer-sp - IP 20.38.104.14 - Low Risk (MFA Succeeded)
+[2026-05-22 11:20:45] AzureActivity - devops-deployer-sp - Update Web App - Status: Succeeded
+[2026-05-22 11:22:10] SigninLogs - sec-auditor-sa - IP 192.168.10.45 - Low Risk (Intranet)
+[2026-05-22 12:05:12] AzureActivity - sec-auditor-sa - List Keys - Status: Succeeded</pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Cost Optimizer (C4) Tab View -->
+            <section class="tab-view" id="tab-cost">
+                <div class="tab-grid-two">
+                    <div class="glass-card chart-container">
+                        <div class="card-title-bar">
+                            <h4>Daily Spend Trend & Anomaly Detection</h4>
+                        </div>
+                        <div class="chart-wrapper">
+                            <canvas id="c4CostChart"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="glass-card content-panel">
+                        <div class="panel-header">
+                            <h4>Challenge 04: Cost Anomaly & Orphaned Resource Management</h4>
+                        </div>
+                        <div class="panel-body text-gray">
+                            <p>Identify, audit, and remediate cost spikes. This tab allows auditing orphaned Azure resources such as unattached Managed Disks and Public IP addresses.</p>
+
+                            <div class="orphaned-resources-box mt-4">
+                                <h5>Orphaned / Unused Resources List (Azure Resource Graph):</h5>
+                                <table class="custom-table mt-2">
+                                    <thead>
+                                        <tr>
+                                            <th>Resource Name</th>
+                                            <th>Resource Type</th>
+                                            <th>Current State</th>
+                                            <th>Monthly Idle Cost</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="orphaned-table-body">
+                                        <tr class="empty-state">
+                                            <td colspan="4" class="text-center py-4 text-gray">No unused or orphaned resources found in active subscription.</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <div class="runbook-box mt-4" id="cleanup-runbook-container" style="display: none;">
+                                <div class="runbook-header">
+                                    <h5>Automated PowerShell Cleanup Runbook (AI-Generated):</h5>
+                                    <button class="copy-btn" onclick="navigator.clipboard.writeText(document.getElementById('ps-runbook-code').innerText); alert('Runbook copied to clipboard!')">
+                                        <i data-lucide="copy" class="sm-icon"></i> Copy
+                                    </button>
+                                </div>
+                                <pre class="code-block font-mono text-sm" id="ps-runbook-code">
+# Azure CloudOps AI - Automated Cleanup Runbook
+# Targets unattached Managed Disks and Public IPs
+Write-Host "Connecting to Azure Subscription..."
+
+# Fetch orphaned Managed Disks
+$orphanedDisks = Get-AzDisk | Where-Object { $_.DiskState -eq 'Unattached' }
+foreach ($disk in $orphanedDisks) {
+    Write-Host "Removing unattached disk: $($disk.Name) (Saving $120.00/mo)" -ForegroundColor Yellow
+    Remove-AzDisk -ResourceGroupName $disk.ResourceGroupName -DiskName $disk.Name -Force -ErrorAction SilentlyContinue
+}
+
+# Fetch unassociated Public IP Addresses
+$ips = Get-AzPublicIpAddress | Where-Object { $_.IpConfiguration -eq $null }
+foreach ($ip in $ips) {
+    Write-Host "Removing unused Public IP: $($ip.Name) (Saving $5.00/mo)" -ForegroundColor Yellow
+    Remove-AzPublicIpAddress -ResourceGroupName $ip.ResourceGroupName -Name $ip.Name -Force -ErrorAction SilentlyContinue
+}
+
+Write-Host "Cleanup completed successfully!" -ForegroundColor Green</pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Baselines & Forecasting (C5) Tab View -->
+            <section class="tab-view" id="tab-forecasting">
+                <div class="tab-grid-two">
+                    <div class="glass-card chart-container">
+                        <div class="card-title-bar">
+                            <h4>AutoML Operational Metric Forecast vs. Actual Stream</h4>
+                            <span class="badge" id="c5-forecast-badge">AutoML Baseline</span>
+                        </div>
+                        <div class="chart-wrapper">
+                            <canvas id="c5ForecastingChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="glass-card content-panel">
+                        <div class="panel-header">
+                            <h4>Challenge 05: Machine Learning Forecasting & Out-of-Bounds Analysis</h4>
+                        </div>
+                        <div class="panel-body text-gray">
+                            <p>By learning from 30 days of historical CPU and memory metrics, Azure ML AutoML forecasts normal operational boundaries with confidence intervals.</p>
+                            
+                            <div class="anomaly-detector-result glass-box mt-4" id="c5-forecast-panel">
+                                <div class="status-row">
+                                    <strong>Forecast Confidence Bound:</strong>
+                                    <span class="badge healthy" id="c5-deviation-status">WITHIN NORMAL BOUNDS</span>
+                                </div>
+                                <p class="mt-2 text-sm">Real-time metrics are compared programmatically against the ML model's forecasted boundaries to trigger alerts before service thresholds are crossed.</p>
+                            </div>
+
+                            <div class="log-preview mt-4">
+                                <h5>Azure OpenAI Forecast Insights (GPT-4o):</h5>
+                                <div class="glass-box text-sm text-white" id="c5-insight-box">
+                                    "Telemetry analysis shows CPU and memory patterns perfectly aligned with regular weekday workloads. No unexpected structural breaks or variance leaks detected in the time-series bounds."
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Azure Copilot (C6) Tab View -->
+            <section class="tab-view" id="tab-copilot">
+                <div class="copilot-layout">
+                    <div class="copilot-sidebar">
+                        <h4>AI Operations Center</h4>
+                        <p class="text-xs text-gray mt-1">Natural language reasoning across telemetry systems, Security Incident logs, and Cost models.</p>
+                        
+                        <div class="model-meta mt-4">
+                            <div class="status-row text-xs">
+                                <span>LLM Engine:</span>
+                                <span class="font-mono text-purple">Azure OpenAI gpt-4o</span>
+                            </div>
+                            <div class="status-row text-xs mt-1">
+                                <span>Data Feeds:</span>
+                                <span class="text-gray">AppInsights, Sentinel, Billing</span>
+                            </div>
+                        </div>
+
+                        <div class="quick-questions vertical mt-4">
+                            <h5>Suggested Prompts:</h5>
+                            <button class="quick-q-btn text-left" data-query="Act as my central operations assistant. Generate a unified operational summary across monitoring, cost, and security.">
+                                <i data-lucide="clipboard-list" class="sm-icon text-purple"></i> Unified Operations Summary
+                            </button>
+                            <button class="quick-q-btn text-left" data-query="Explain root cause of latency degradation and dependency spikes.">
+                                <i data-lucide="alert-triangle" class="sm-icon text-rose"></i> Root-Cause Latency Analysis
+                            </button>
+                            <button class="quick-q-btn text-left" data-query="Investigate Sentinel access patterns and identity overprivileging.">
+                                <i data-lucide="shield" class="sm-icon text-green"></i> Security Risk Investigations
+                            </button>
+                            <button class="quick-q-btn text-left" data-query="Review cost anomalies and outline cleanup runbook.">
+                                <i data-lucide="dollar-sign" class="sm-icon text-amber"></i> Cost Optimization & Remediation
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="copilot-chat-container glass-card">
+                        <div class="chat-header">
+                            <div class="chat-title">
+                                <i data-lucide="bot" class="text-purple"></i>
+                                <div>
+                                    <h5>Azure Copilot</h5>
+                                    <span>AI Cloud Assistant • Online</span>
+                                </div>
+                            </div>
+                            <button class="clear-chat-btn" id="clear-chat-btn"><i data-lucide="trash-2" class="sm-icon"></i> Clear</button>
+                        </div>
+
+                        <div class="chat-messages" id="chat-messages">
+                            <div class="message assistant">
+                                <div class="message-bubble">
+                                    Hello! I am your **Azure Copilot** for cloud operations. I can search across your Log Analytics workspaces, Azure Sentinel security incidents, and Cost Management records to help you monitor, secure, and optimize your cloud footprint. 
+
+                                    How can I help you today?
+                                </div>
+                                <span class="message-time">Just Now</span>
+                            </div>
+                        </div>
+
+                        <div class="chat-input-area">
+                            <input type="text" id="chat-input" placeholder="Ask Copilot about telemetry, security, or costs..." autocomplete="off">
+                            <button id="send-chat-btn" class="send-btn"><i data-lucide="send"></i></button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Incident Simulator Sidebar Panel -->
+        <aside class="simulator-panel">
+            <div class="simulator-header">
+                <i data-lucide="sliders" class="text-cyan"></i>
+                <div>
+                    <h4>Incident Simulator</h4>
+                    <span>Demonstration Controls</span>
+                </div>
+            </div>
+
+            <div class="simulator-body">
+                <p class="simulator-desc">Trigger standard cloud incidents to instantly demonstrate how telemetry charts react, AI models flag anomalies, Sentinel triggers, and Copilot correlates root causes.</p>
+                
+                <div class="sim-group">
+                    <h5>Monitoring & Observability</h5>
+                    <button class="sim-btn" id="btn-sim-latency">
+                        <i data-lucide="zap"></i> Inject App Latency Spike (C1)
+                    </button>
+                    <button class="sim-btn" id="btn-sim-reliability">
+                        <i data-lucide="server"></i> SQL DTU Spikes & VM Load (C2)
+                    </button>
+                </div>
+
+                <div class="sim-group mt-4">
+                    <h5>Security & Auditing</h5>
+                    <button class="sim-btn" id="btn-sim-security">
+                        <i data-lucide="shield-alert"></i> Trigger Security Access Anomaly (C3)
+                    </button>
+                </div>
+
+                <div class="sim-group mt-4">
+                    <h5>Cost & Budget</h5>
+                    <button class="sim-btn" id="btn-sim-cost">
+                        <i data-lucide="coins"></i> Inject Cost Anomaly (C4)
+                    </button>
+                </div>
+
+                <div class="sim-group mt-4">
+                    <h5>Forecasting & Baselines</h5>
+                    <button class="sim-btn" id="btn-sim-leak">
+                        <i data-lucide="trending-up"></i> VM Memory Leakage Anomaly (C5)
+                    </button>
+                </div>
+
+                <button class="reset-btn mt-6" id="btn-sim-reset">
+                    <i data-lucide="refresh-cw"></i> Reset Environment Health
+                </button>
+            </div>
+            
+            <div class="simulator-footer">
+                <span>CloudOps AI Simulation Engine v1.0.0</span>
+            </div>
+        </aside>
+    </div>
+
+    <!-- Application Script -->
+    <script src="app.js"></script>
+</body>
+</html>
