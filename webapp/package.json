@@ -1,0 +1,10 @@
+{
+  "name": "cloudops-ai-portal",
+  "version": "1.0.0",
+  "private": true,
+  "description": "CloudOps AI Interactive Operations & Observability Portal",
+  "scripts": {
+    "build": "echo 'No build script required. Packaging static files directly.'"
+  },
+  "dependencies": {}
+}
