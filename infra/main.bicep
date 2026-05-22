@@ -1,4 +1,5 @@
-targetScope = 'subscription'
+// Scoped to Resource Group by default to ensure 100% compatibility with restricted Azure Lab environments
+targetScope = 'resourceGroup'
 
 @minLength(1)
 @maxLength(64)
@@ -6,27 +7,16 @@ targetScope = 'subscription'
 param environmentName string
 
 @description('Primary location for all resources. Region must support Azure OpenAI (e.g. eastus2, swedencentral).')
-param location string = 'eastus2'
-
-@description('Optional name of an existing resource group. If not provided, a new one will be created.')
-param resourceGroupName string = ''
+param location string = resourceGroup().location
 
 // CAF naming conventions loading
 var abbreviations = loadJsonContent('./abbreviations.json')
-var resourceToken = toLower(uniqueString(subscription().id, environmentName, location))
+var resourceToken = toLower(uniqueString(resourceGroup().id, environmentName, location))
 var tags = { 'azd-env-name': environmentName }
 
-// Create or fetch the resource group to hold our architecture
-resource rg 'Microsoft.Resources/resourceGroups@2021-04-01' = {
-  name: !empty(resourceGroupName) ? resourceGroupName : '${abbreviations.resourceGroup}${environmentName}'
-  location: location
-  tags: tags
-}
-
-// Orchestrate the resource group services
+// Orchestrate the services directly in current resource group scope
 module resources './resources.bicep' = {
   name: 'resources-deployment'
-  scope: rg
   params: {
     location: location
     resourceToken: resourceToken
