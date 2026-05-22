@@ -1,0 +1,8 @@
+{
+  "cognitiveServicesAccount": "cog-",
+  "cognitiveServicesAccountDeployment": "deploy-",
+  "logAnalyticsWorkspace": "log-",
+  "appInsights": "appi-",
+  "staticWebApp": "sttweb-",
+  "resourceGroup": "rg-"
+}

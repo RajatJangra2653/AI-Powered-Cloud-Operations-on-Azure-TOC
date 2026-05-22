@@ -37,13 +37,35 @@ python -m http.server 8000 --directory webapp
 ```
 Then, open `http://localhost:3000` (for serve) or `http://localhost:8000` (for Python) in your browser.
 
----
-
 ## Deploying Directly to Azure
 
-This application is ready to be deployed directly to Microsoft Azure. We recommend two simple deployment options:
+This application is fully optimized for automated cloud deployments. You can deploy both the interactive dashboard and all underlying Azure AI/Observability resources using **Azure Developer CLI (azd)**, or deploy the web files independently.
 
-### Option A: Azure Static Web Apps (Recommended & Free Tier)
+### Option A: One-Click Automated Deploy using Azure Developer CLI (`azd`)
+The Azure Developer CLI (`azd`) is the fastest way to provision the entire AI operations architecture (Static Web App, Log Analytics, App Insights, Azure OpenAI with gpt-4o, and AI Anomaly Detector) and host the dashboard.
+
+1. **Install azd**: If you haven't already, install the Azure Developer CLI:
+   - On Windows (PowerShell): `winget install Microsoft.Azd`
+   - On macOS (Homebrew): `brew install azd`
+2. **Authenticate with Azure**:
+   ```bash
+   azd auth login
+   ```
+3. **Deploy everything**:
+   Run the following command at the root of the repository:
+   ```bash
+   azd up
+   ```
+4. **Configure environment**:
+   - Enter an environment name (e.g. `cloudops-ai`).
+   - Select your Azure subscription.
+   - Select your target location (choose a region that supports Azure OpenAI, such as `eastus2` or `swedencentral`).
+5. **Access the Live Portal**: 
+   Once the provisioning and packaging complete, the CLI will output the live **Azure Static Web App URL**. Open this URL in your browser!
+
+---
+
+### Option B: Azure Static Web Apps (Manual Portal Setup)
 Azure Static Web Apps is the fastest, easiest way to host static single-page web applications on Azure.
 
 #### Method 1: Using the Azure Portal (Zero CLI)
@@ -65,7 +87,7 @@ Azure Static Web Apps is the fastest, easiest way to host static single-page web
 
 ---
 
-### Option B: Azure App Service (HTML/Static Hosting)
+### Option C: Azure App Service (HTML/Static Hosting)
 If you want to host this in a standard Azure App Service Web App, you can deploy it using the Azure CLI.
 
 1. Install the [Azure CLI](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli) if you haven't already.

@@ -1,0 +1,10 @@
+# Azure Developer CLI metadata definition
+# Enables direct automation via "azd up"
+name: AI-Powered-Cloud-Operations-on-Azure
+metadata:
+  template: AI-Powered-Cloud-Operations-on-Azure@0.0.1
+services:
+  web:
+    project: ./webapp
+    host: staticweb
+    language: js
