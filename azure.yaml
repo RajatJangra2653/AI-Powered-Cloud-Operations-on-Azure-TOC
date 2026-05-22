@@ -6,5 +6,5 @@ metadata:
 services:
   web:
     project: ./webapp
-    host: staticweb
+    host: staticwebapp
     language: js
