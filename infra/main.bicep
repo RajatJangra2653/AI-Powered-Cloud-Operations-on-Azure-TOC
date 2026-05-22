@@ -8,14 +8,17 @@ param environmentName string
 @description('Primary location for all resources. Region must support Azure OpenAI (e.g. eastus2, swedencentral).')
 param location string = 'eastus2'
 
+@description('Optional name of an existing resource group. If not provided, a new one will be created.')
+param resourceGroupName string = ''
+
 // CAF naming conventions loading
 var abbreviations = loadJsonContent('./abbreviations.json')
 var resourceToken = toLower(uniqueString(subscription().id, environmentName, location))
 var tags = { 'azd-env-name': environmentName }
 
-// Create a resource group to hold our architecture
+// Create or fetch the resource group to hold our architecture
 resource rg 'Microsoft.Resources/resourceGroups@2021-04-01' = {
-  name: '${abbreviations.resourceGroup}${environmentName}'
+  name: !empty(resourceGroupName) ? resourceGroupName : '${abbreviations.resourceGroup}${environmentName}'
   location: location
   tags: tags
 }
