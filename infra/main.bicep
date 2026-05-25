@@ -12,6 +12,9 @@ param location string = ''
 @description('Name of the resource group (automatically filled by azd if deploying to existing group).')
 param resourceGroupName string = ''
 
+param principalId string = ''
+param principalType string = 'User'
+
 // CAF naming conventions loading
 var abbreviations = loadJsonContent('./abbreviations.json')
 
@@ -39,6 +42,8 @@ module resources './resources.bicep' = {
     resourceToken: resourceToken
     abbreviations: abbreviations
     tags: tags
+    principalId: principalId
+    principalType: principalType
   }
 }
 

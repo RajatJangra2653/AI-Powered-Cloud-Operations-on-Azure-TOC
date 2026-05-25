@@ -2,6 +2,8 @@ param location string
 param resourceToken string
 param abbreviations object
 param tags object
+param principalId string = ''
+param principalType string = 'User'
 
 // 1. Log Analytics Workspace (Challenge 1, 2, 5 logging baseline)
 resource logAnalytics 'Microsoft.OperationalInsights/workspaces@2021-12-01-preview' = {
@@ -78,3 +80,15 @@ resource staticWebApp 'Microsoft.Web/staticSites@2022-03-01' = {
 output AZURE_STATIC_WEB_APP_URL string = staticWebApp.properties.defaultHostname
 output AZURE_STATIC_WEB_APP_NAME string = staticWebApp.name
 output AZURE_OPENAI_ENDPOINT string = openAi.properties.endpoint
+
+// 6. Role Assignment for Deployer (Contributor role on the Static Web App)
+// This resolves the 403 AuthorizationFailed error during the azd deployment phase.
+resource staticWebAppRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (!empty(principalId)) {
+  name: guid(staticWebApp.id, principalId, 'b24988ac-6180-42a0-ab88-20f7382dd24c')
+  scope: staticWebApp
+  properties: {
+    principalId: principalId
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'b24988ac-6180-42a0-ab88-20f7382dd24c') // Contributor
+    principalType: principalType
+  }
+}
