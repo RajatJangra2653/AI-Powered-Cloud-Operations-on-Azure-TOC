@@ -16,6 +16,7 @@
     <script type="text/javascript" src="https://js.monitor.azure.com/scripts/b/ai.2.min.js"></script>
     <!-- Styling -->
     <link rel="stylesheet" href="styles.css">
+    <script>window.ENV = { APPLICATIONINSIGHTS_CONNECTION_STRING: '' };</script>
 </head>
 <body>
     <div class="app-container">
@@ -639,6 +640,8 @@ Write-Host "Cleanup completed successfully!" -ForegroundColor Green</pre>
         </aside>
     </div>
 
+    <!-- Configuration -->
+    <script src="config.js"></script>
     <!-- Application Script -->
     <script src="app.js"></script>
 </body>

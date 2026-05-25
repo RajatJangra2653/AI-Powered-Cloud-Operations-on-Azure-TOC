@@ -11,11 +11,13 @@ document.addEventListener('DOMContentLoaded', () => {
     initializeSimulator();
     initializeCopilot();
 
-    // Auto-detect and connect to App Insights if connection string exists in localStorage
+    // Auto-detect and connect to App Insights if connection string exists in window.ENV or localStorage
+    const envConnStr = window.ENV && window.ENV.APPLICATIONINSIGHTS_CONNECTION_STRING;
     const savedConnStr = localStorage.getItem('azure_appinsights_connectionstring');
-    if (savedConnStr) {
-        document.getElementById('connection-string-input').value = savedConnStr;
-        connectToAppInsights(savedConnStr);
+    const connStr = envConnStr || savedConnStr;
+    if (connStr) {
+        document.getElementById('connection-string-input').value = connStr;
+        connectToAppInsights(connStr);
     }
 });
 

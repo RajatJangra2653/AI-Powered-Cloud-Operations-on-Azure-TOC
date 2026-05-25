@@ -8,3 +8,18 @@ services:
     project: ./webapp
     host: staticwebapp
     language: js
+
+hooks:
+  postprovision:
+    windows:
+      shell: pwsh
+      run: |
+        $connStr = azd env get-value APPLICATIONINSIGHTS_CONNECTION_STRING
+        "window.ENV = { APPLICATIONINSIGHTS_CONNECTION_STRING: '$connStr' };" | Out-File -FilePath ./webapp/config.js -Encoding utf8
+        Write-Host "Successfully injected Application Insights Connection String into webapp/config.js!" -ForegroundColor Green
+    posix:
+      shell: sh
+      run: |
+        CONN_STR=$(azd env get-value APPLICATIONINSIGHTS_CONNECTION_STRING)
+        echo "window.ENV = { APPLICATIONINSIGHTS_CONNECTION_STRING: '$CONN_STR' };" > ./webapp/config.js
+        echo "Successfully injected Application Insights Connection String into webapp/config.js!"
