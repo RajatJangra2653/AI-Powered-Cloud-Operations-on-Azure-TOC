@@ -1097,3 +1097,62 @@ pre.code-block {
     transform: scale(1.2);
 }
 
+/* Tuner Connection Styles */
+.block {
+    display: block;
+}
+.mb-1 {
+    margin-bottom: 4px;
+}
+.tuner-connection {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px dashed var(--border-color);
+    border-radius: 8px;
+    padding: 10px;
+}
+.connection-input-group {
+    display: flex;
+    gap: 8px;
+    margin-top: 4px;
+}
+.connection-input {
+    flex-grow: 1;
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    padding: 6px 10px;
+    color: #fff;
+    font-family: var(--font-sans);
+    font-size: 0.75rem;
+    outline: none;
+    width: 10px; /* will flex-grow */
+}
+.connection-input:focus {
+    border-color: var(--cyan);
+}
+.connect-btn {
+    background: var(--cyan);
+    border: none;
+    border-radius: 4px;
+    color: #000;
+    font-family: var(--font-sans);
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 6px 12px;
+    cursor: pointer;
+    transition: var(--transition-smooth);
+    white-space: nowrap;
+}
+.connect-btn:hover {
+    background: #5cf2ff;
+    box-shadow: 0 0 8px var(--cyan-glow);
+}
+.connect-btn.connected {
+    background: var(--green);
+    color: #fff;
+}
+.pt-3 {
+    padding-top: 12px;
+}
+
+

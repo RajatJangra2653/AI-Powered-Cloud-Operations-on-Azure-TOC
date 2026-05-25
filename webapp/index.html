@@ -12,6 +12,8 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- Lucide Icons CDN -->
     <script src="https://cdn.jsdelivr.net/npm/lucide/dist/umd/lucide.js"></script>
+    <!-- Application Insights JS SDK -->
+    <script type="text/javascript" src="https://js.monitor.azure.com/javascript/sdk/v2/ai.2.min.js"></script>
     <!-- Styling -->
     <link rel="stylesheet" href="styles.css">
 </head>
@@ -614,6 +616,15 @@ Write-Host "Cleanup completed successfully!" -ForegroundColor Green</pre>
                             <span class="tuner-val text-amber" id="tuner-memory-val">45%</span>
                         </div>
                         <input type="range" class="tuner-slider" id="slider-memory" min="0" max="100" value="45">
+                    </div>
+
+                    <div class="tuner-connection mt-4 border-top pt-3">
+                        <label class="text-xs text-muted block mb-1">Azure App Insights Connection String</label>
+                        <div class="connection-input-group">
+                            <input type="password" id="connection-string-input" class="connection-input" placeholder="InstrumentationKey=...;IngestionEndpoint=...">
+                            <button id="btn-connect-telemetry" class="connect-btn">Connect</button>
+                        </div>
+                        <span class="text-xs text-dim mt-1 block" id="telemetry-status-msg">Running in Local Simulation mode</span>
                     </div>
                 </div>
 

@@ -80,6 +80,7 @@ resource staticWebApp 'Microsoft.Web/staticSites@2022-03-01' = {
 output AZURE_STATIC_WEB_APP_URL string = staticWebApp.properties.defaultHostname
 output AZURE_STATIC_WEB_APP_NAME string = staticWebApp.name
 output AZURE_OPENAI_ENDPOINT string = openAi.properties.endpoint
+output APPLICATIONINSIGHTS_CONNECTION_STRING string = appInsights.properties.ConnectionString
 
 // 6. Role Assignment for Deployer (Contributor role on the Static Web App)
 // This resolves the 403 AuthorizationFailed error during the azd deployment phase.

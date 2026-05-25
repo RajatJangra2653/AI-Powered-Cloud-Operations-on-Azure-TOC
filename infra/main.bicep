@@ -51,3 +51,4 @@ module resources './resources.bicep' = {
 output AZURE_STATIC_WEB_APP_URL string = resources.outputs.AZURE_STATIC_WEB_APP_URL
 output AZURE_STATIC_WEB_APP_NAME string = resources.outputs.AZURE_STATIC_WEB_APP_NAME
 output AZURE_OPENAI_ENDPOINT string = resources.outputs.AZURE_OPENAI_ENDPOINT
+output APPLICATIONINSIGHTS_CONNECTION_STRING string = resources.outputs.APPLICATIONINSIGHTS_CONNECTION_STRING

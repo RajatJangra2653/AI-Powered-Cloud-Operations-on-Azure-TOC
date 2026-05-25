@@ -1,5 +1,8 @@
 // CloudOps AI Portal - Core Application JavaScript
 
+// Global Application Insights state
+let appInsights = null;
+
 document.addEventListener('DOMContentLoaded', () => {
     // 1. Initializations
     lucide.createIcons();
@@ -7,6 +10,13 @@ document.addEventListener('DOMContentLoaded', () => {
     initializeCharts();
     initializeSimulator();
     initializeCopilot();
+
+    // Auto-detect and connect to App Insights if connection string exists in localStorage
+    const savedConnStr = localStorage.getItem('azure_appinsights_connectionstring');
+    if (savedConnStr) {
+        document.getElementById('connection-string-input').value = savedConnStr;
+        connectToAppInsights(savedConnStr);
+    }
 });
 
 // 2. Global State Management
@@ -369,6 +379,100 @@ function initializeSimulator() {
         document.getElementById('tuner-memory-val').textContent = `${val}%`;
         updateMemoryTelemetry(val);
     });
+
+    // Connect Telemetry button event
+    const btnConnect = document.getElementById('btn-connect-telemetry');
+    btnConnect.addEventListener('click', () => {
+        const connStr = document.getElementById('connection-string-input').value.trim();
+        if (connStr) {
+            connectToAppInsights(connStr);
+        } else {
+            // Disconnect if empty
+            localStorage.removeItem('azure_appinsights_connectionstring');
+            appInsights = null;
+            btnConnect.textContent = "Connect";
+            btnConnect.className = "connect-btn";
+            document.getElementById('telemetry-status-msg').textContent = "Running in Local Simulation mode";
+            document.getElementById('telemetry-status-msg').className = "text-xs text-dim mt-1 block";
+        }
+    });
+}
+
+function connectToAppInsights(connectionString) {
+    const btnConnect = document.getElementById('btn-connect-telemetry');
+    const statusMsg = document.getElementById('telemetry-status-msg');
+    try {
+        if (window.Microsoft && window.Microsoft.ApplicationInsights) {
+            const config = {
+                connectionString: connectionString,
+                enableAutoRouteTracking: true,
+                maxAjaxCallsPerView: -1
+            };
+            appInsights = new Microsoft.ApplicationInsights.ApplicationInsights({ config: config });
+            appInsights.loadAppInsights();
+            appInsights.trackPageView();
+            
+            // Save to localStorage
+            localStorage.setItem('azure_appinsights_connectionstring', connectionString);
+            
+            // Update UI
+            btnConnect.textContent = "Connected";
+            btnConnect.className = "connect-btn connected";
+            statusMsg.textContent = "Transmitting live telemetry to Azure App Insights!";
+            statusMsg.className = "text-xs text-green mt-1 block font-semibold";
+            console.log("Connected to Azure App Insights successfully!");
+
+            // Send initial page load and initial telemetry values
+            trackRealTelemetry("InitialConnection", 1);
+            sendAllLiveTelemetry();
+            return true;
+        } else {
+            statusMsg.textContent = "Application Insights SDK not loaded.";
+            statusMsg.className = "text-xs text-rose mt-1 block";
+            console.error("Microsoft.ApplicationInsights SDK was not found on the page.");
+            return false;
+        }
+    } catch (e) {
+        statusMsg.textContent = "Invalid Connection String.";
+        statusMsg.className = "text-xs text-rose mt-1 block";
+        console.error("App Insights Connection Error:", e);
+        return false;
+    }
+}
+
+function trackRealTelemetry(metricName, value) {
+    if (!appInsights) return;
+    try {
+        // Track as custom metric in App Insights
+        appInsights.trackMetric({ name: metricName, value: value });
+
+        // Also track as custom event for robust KQL queries
+        appInsights.trackEvent({
+            name: "TelemetryAdjustment",
+            properties: {
+                metricName: metricName,
+                value: value,
+                latency: parseInt(document.getElementById('slider-latency').value),
+                dtu: parseInt(document.getElementById('slider-dtu').value),
+                cpu: parseInt(document.getElementById('slider-cpu').value),
+                alerts: parseInt(document.getElementById('slider-alerts').value),
+                spend: parseInt(document.getElementById('slider-spend').value),
+                memory: parseInt(document.getElementById('slider-memory').value),
+                timestamp: new Date().toISOString()
+            }
+        });
+    } catch (e) {
+        console.error("Telemetry track error:", e);
+    }
+}
+
+function sendAllLiveTelemetry() {
+    trackRealTelemetry("AppLatency", parseInt(document.getElementById('slider-latency').value));
+    trackRealTelemetry("SqlDtu", parseInt(document.getElementById('slider-dtu').value));
+    trackRealTelemetry("VmCpu", parseInt(document.getElementById('slider-cpu').value));
+    trackRealTelemetry("SentinelAlerts", parseInt(document.getElementById('slider-alerts').value));
+    trackRealTelemetry("DailySpend", parseInt(document.getElementById('slider-spend').value));
+    trackRealTelemetry("VmMemory", parseInt(document.getElementById('slider-memory').value));
 }
 
 function syncSlidersToIncident(type) {
@@ -461,6 +565,7 @@ function triggerIncident(type) {
 }
 
 function updateLatencyTelemetry(val) {
+    trackRealTelemetry("AppLatency", val);
     // 1. Update card value
     const dashLatencyVal = document.getElementById('dash-latency-val');
     dashLatencyVal.textContent = `${val} ms`;
@@ -530,6 +635,7 @@ function updateLatencyTelemetry(val) {
 }
 
 function updateDtuTelemetry(val) {
+    trackRealTelemetry("SqlDtu", val);
     const dashDtuVal = document.getElementById('dash-dtu-val');
     dashDtuVal.textContent = `${val}%`;
 
@@ -581,6 +687,7 @@ function updateDtuTelemetry(val) {
 }
 
 function updateCpuTelemetry(val) {
+    trackRealTelemetry("VmCpu", val);
     const isHigh = (val >= 80);
     updateProgressMeter('vm-cpu', val, isHigh ? 'bg-rose' : 'bg-cyan');
 
@@ -627,6 +734,7 @@ function updateCpuTelemetry(val) {
 }
 
 function updateAlertsTelemetry(val) {
+    trackRealTelemetry("SentinelAlerts", val);
     const dashSecVal = document.getElementById('dash-security-val');
     dashSecVal.textContent = val;
 
@@ -730,6 +838,7 @@ function updateAlertsTelemetry(val) {
 }
 
 function updateSpendTelemetry(val) {
+    trackRealTelemetry("DailySpend", val);
     charts.c4Cost.data.datasets[0].data[3] = val;
 
     const isHigh = (val >= 100);
@@ -802,6 +911,7 @@ function updateSpendTelemetry(val) {
 }
 
 function updateMemoryTelemetry(val) {
+    trackRealTelemetry("VmMemory", val);
     charts.c5Forecasting.data.datasets[3].data[charts.c5Forecasting.data.datasets[3].data.length - 1] = val;
     charts.c5Forecasting.update('none');
 
