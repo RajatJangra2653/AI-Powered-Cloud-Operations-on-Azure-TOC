@@ -47,7 +47,7 @@ resource gpt4oMini 'Microsoft.CognitiveServices/accounts/deployments@2023-05-01'
   parent: openAi
   name: 'gpt-4o-mini'
   sku: {
-    name: 'Standard'
+    name: 'GlobalStandard'
     capacity: 10
   }
   properties: {
