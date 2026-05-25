@@ -319,12 +319,88 @@ function initializeSimulator() {
     const btnLeak = document.getElementById('btn-sim-leak');
     const btnReset = document.getElementById('btn-sim-reset');
 
-    btnLatency.addEventListener('click', () => triggerIncident('latency'));
-    btnReliability.addEventListener('click', () => triggerIncident('reliability'));
-    btnSecurity.addEventListener('click', () => triggerIncident('security'));
-    btnCost.addEventListener('click', () => triggerIncident('cost'));
-    btnLeak.addEventListener('click', () => triggerIncident('leak'));
-    btnReset.addEventListener('click', () => triggerIncident('none'));
+    btnLatency.addEventListener('click', () => { triggerIncident('latency'); syncSlidersToIncident('latency'); });
+    btnReliability.addEventListener('click', () => { triggerIncident('reliability'); syncSlidersToIncident('reliability'); });
+    btnSecurity.addEventListener('click', () => { triggerIncident('security'); syncSlidersToIncident('security'); });
+    btnCost.addEventListener('click', () => { triggerIncident('cost'); syncSlidersToIncident('cost'); });
+    btnLeak.addEventListener('click', () => { triggerIncident('leak'); syncSlidersToIncident('leak'); });
+    btnReset.addEventListener('click', () => { triggerIncident('none'); syncSlidersToIncident('none'); });
+
+    // Live range sliders connection
+    const sliderLatency = document.getElementById('slider-latency');
+    const sliderDtu = document.getElementById('slider-dtu');
+    const sliderCpu = document.getElementById('slider-cpu');
+    const sliderAlerts = document.getElementById('slider-alerts');
+    const sliderSpend = document.getElementById('slider-spend');
+    const sliderMemory = document.getElementById('slider-memory');
+
+    sliderLatency.addEventListener('input', (e) => {
+        const val = parseInt(e.target.value);
+        document.getElementById('tuner-latency-val').textContent = `${val} ms`;
+        updateLatencyTelemetry(val);
+    });
+
+    sliderDtu.addEventListener('input', (e) => {
+        const val = parseInt(e.target.value);
+        document.getElementById('tuner-dtu-val').textContent = `${val}%`;
+        updateDtuTelemetry(val);
+    });
+
+    sliderCpu.addEventListener('input', (e) => {
+        const val = parseInt(e.target.value);
+        document.getElementById('tuner-cpu-val').textContent = `${val}%`;
+        updateCpuTelemetry(val);
+    });
+
+    sliderAlerts.addEventListener('input', (e) => {
+        const val = parseInt(e.target.value);
+        document.getElementById('tuner-alerts-val').textContent = val;
+        updateAlertsTelemetry(val);
+    });
+
+    sliderSpend.addEventListener('input', (e) => {
+        const val = parseInt(e.target.value);
+        document.getElementById('tuner-spend-val').textContent = `$${val.toFixed(2)}`;
+        updateSpendTelemetry(val);
+    });
+
+    sliderMemory.addEventListener('input', (e) => {
+        const val = parseInt(e.target.value);
+        document.getElementById('tuner-memory-val').textContent = `${val}%`;
+        updateMemoryTelemetry(val);
+    });
+}
+
+function syncSlidersToIncident(type) {
+    const sliderLatency = document.getElementById('slider-latency');
+    const sliderDtu = document.getElementById('slider-dtu');
+    const sliderCpu = document.getElementById('slider-cpu');
+    const sliderAlerts = document.getElementById('slider-alerts');
+    const sliderSpend = document.getElementById('slider-spend');
+    const sliderMemory = document.getElementById('slider-memory');
+
+    let vals = {
+        none: { latency: 124, dtu: 28, cpu: 14, alerts: 0, spend: 21, memory: 45 },
+        latency: { latency: 854, dtu: 42, cpu: 45, alerts: 0, spend: 21, memory: 45 },
+        reliability: { latency: 854, dtu: 98, cpu: 78, alerts: 0, spend: 21, memory: 52 },
+        security: { latency: 124, dtu: 28, cpu: 14, alerts: 1, spend: 21, memory: 45 },
+        cost: { latency: 124, dtu: 28, cpu: 14, alerts: 0, spend: 328, memory: 45 },
+        leak: { latency: 124, dtu: 28, cpu: 14, alerts: 0, spend: 21, memory: 88 }
+    }[type] || { latency: 124, dtu: 28, cpu: 14, alerts: 0, spend: 21, memory: 45 };
+
+    sliderLatency.value = vals.latency;
+    sliderDtu.value = vals.dtu;
+    sliderCpu.value = vals.cpu;
+    sliderAlerts.value = vals.alerts;
+    sliderSpend.value = vals.spend;
+    sliderMemory.value = vals.memory;
+
+    document.getElementById('tuner-latency-val').textContent = `${vals.latency} ms`;
+    document.getElementById('tuner-dtu-val').textContent = `${vals.dtu}%`;
+    document.getElementById('tuner-cpu-val').textContent = `${vals.cpu}%`;
+    document.getElementById('tuner-alerts-val').textContent = vals.alerts;
+    document.getElementById('tuner-spend-val').textContent = `$${vals.spend.toFixed(2)}`;
+    document.getElementById('tuner-memory-val').textContent = `${vals.memory}%`;
 }
 
 function triggerIncident(type) {
@@ -382,6 +458,422 @@ function triggerIncident(type) {
 
     // Force updates to render instantly
     resizeActiveTabCharts();
+}
+
+function updateLatencyTelemetry(val) {
+    // 1. Update card value
+    const dashLatencyVal = document.getElementById('dash-latency-val');
+    dashLatencyVal.textContent = `${val} ms`;
+    
+    // 2. Determine severity class & style
+    if (val >= 400) {
+        dashLatencyVal.className = "card-value text-rose";
+        document.getElementById('latency-trend-badge').textContent = "ANOMALY SIGNAL DETECTED";
+        document.getElementById('latency-trend-badge').className = "badge critical";
+        document.getElementById('c1-telemetry-badge').textContent = "ANOMALOUS ACTIVITY";
+        document.getElementById('c1-telemetry-badge').className = "badge critical";
+        
+        const c1Status = document.getElementById('c1-anomaly-status');
+        c1Status.textContent = "ANOMALY INJECTED: CRITICAL DRIFT";
+        c1Status.className = "badge critical";
+        document.getElementById('c1-anomaly-panel').style.borderColor = "rgba(244, 63, 94, 0.4)";
+        document.getElementById('c1-logs-console').textContent = state.incidentLogs.latency.join("\n");
+        
+        document.querySelector('.copilot-mini-body .bubble').innerHTML = `
+            <span class="text-rose font-bold"><i data-lucide="alert-octagon" class="sm-icon"></i> Alert Detected:</span> A latency spike of **${val}ms** has been identified. Underlying logs reveal **GET /api/orders/list** is blocked by an Azure SQL database query dependency taking **${Math.round(val * 0.72)}ms**. Click **What caused the latency spike?** below to analyze.
+        `;
+        lucide.createIcons();
+        
+        // If no incident is active, trigger an incident banner
+        if (state.activeIncident === 'none') {
+            document.getElementById('env-health-badge').textContent = "Incident Active";
+            document.getElementById('env-health-badge').className = "health-badge anomaly";
+            document.getElementById('active-incidents-count').textContent = "1";
+            document.getElementById('active-incidents-count').className = "status-val text-rose";
+            document.getElementById('active-incident-banner').style.display = "flex";
+            document.getElementById('active-incident-msg').textContent = "Performance degradation detected!";
+            document.getElementById('active-incident-msg').className = "text-rose";
+        }
+    } else {
+        dashLatencyVal.className = "card-value";
+        document.getElementById('latency-trend-badge').textContent = "Standard Baseline";
+        document.getElementById('latency-trend-badge').className = "badge";
+        document.getElementById('c1-telemetry-badge').textContent = "Real-Time";
+        document.getElementById('c1-telemetry-badge').className = "badge";
+        
+        const c1Status = document.getElementById('c1-anomaly-status');
+        c1Status.textContent = "NO ANOMALIES DETECTED";
+        c1Status.className = "badge healthy";
+        document.getElementById('c1-anomaly-panel').style.borderColor = "rgba(255, 255, 255, 0.08)";
+        document.getElementById('c1-logs-console').textContent = state.incidentLogs.none.join("\n");
+        
+        // Reset Copilot text if normal
+        if (state.activeIncident === 'none') {
+            document.querySelector('.copilot-mini-body .bubble').innerHTML = `
+                I am analyzing the operations logs. Currently, all systems are **Healthy**. Click on the **Incident Simulator** to test anomalies, or ask me directly about cost, performance, and security.
+            `;
+            lucide.createIcons();
+            
+            // Check if environment can be marked healthy again
+            checkAndResetEnvironmentHealth();
+        }
+    }
+
+    // 3. Update Chart.js last point
+    charts.dashboardPerformance.data.datasets[0].data[charts.dashboardPerformance.data.datasets[0].data.length - 1] = val;
+    charts.dashboardPerformance.data.datasets[1].data[charts.dashboardPerformance.data.datasets[1].data.length - 1] = Math.round(val * 0.22);
+    charts.dashboardPerformance.update('none');
+
+    charts.c1Performance.data.datasets[0].data[charts.c1Performance.data.datasets[0].data.length - 1] = val;
+    charts.c1Performance.data.datasets[1].data[charts.c1Performance.data.datasets[1].data.length - 1] = Math.round(val * 0.22);
+    charts.c1Performance.update('none');
+}
+
+function updateDtuTelemetry(val) {
+    const dashDtuVal = document.getElementById('dash-dtu-val');
+    dashDtuVal.textContent = `${val}%`;
+
+    const isSaturated = (val >= 80);
+    updateProgressMeter('sql-dtu', val, isSaturated ? 'bg-rose' : 'bg-purple');
+
+    if (isSaturated) {
+        dashDtuVal.className = "card-value text-rose";
+        const c2Status = document.getElementById('c2-alert-status');
+        c2Status.textContent = "CRITICAL LIMIT EXCEEDED";
+        c2Status.className = "badge critical";
+        document.getElementById('c2-observability-panel').style.borderColor = "rgba(244, 63, 94, 0.4)";
+
+        document.querySelector('.copilot-mini-body .bubble').innerHTML = `
+            <span class="text-rose font-bold"><i data-lucide="alert-triangle" class="sm-icon"></i> Resource Saturation:</span> SQL database DTU consumption is at **${val}%**, crossing the critical warning threshold! Click **What caused the latency spike?** to evaluate lock contention.
+        `;
+        lucide.createIcons();
+
+        if (state.activeIncident === 'none') {
+            document.getElementById('env-health-badge').textContent = "Incident Active";
+            document.getElementById('env-health-badge').className = "health-badge anomaly";
+            document.getElementById('active-incidents-count').textContent = "1";
+            document.getElementById('active-incidents-count').className = "status-val text-rose";
+            document.getElementById('active-incident-banner').style.display = "flex";
+            document.getElementById('active-incident-msg').textContent = "Resource Spike: Backend DB Load Out-Of-Bounds!";
+            document.getElementById('active-incident-msg').className = "text-rose";
+        }
+    } else {
+        dashDtuVal.className = "card-value";
+        const cpuVal = parseInt(document.getElementById('slider-cpu').value);
+        if (cpuVal < 80) {
+            const c2Status = document.getElementById('c2-alert-status');
+            c2Status.textContent = "ACTIVE MONITORING";
+            c2Status.className = "badge healthy";
+            document.getElementById('c2-observability-panel').style.borderColor = "rgba(255, 255, 255, 0.08)";
+            
+            if (state.activeIncident === 'none') {
+                document.querySelector('.copilot-mini-body .bubble').innerHTML = `
+                    I am analyzing the operations logs. Currently, all systems are **Healthy**. Click on the **Incident Simulator** to test anomalies, or ask me directly about cost, performance, and security.
+                `;
+                lucide.createIcons();
+                checkAndResetEnvironmentHealth();
+            }
+        }
+    }
+
+    charts.c2Reliability.data.datasets[1].data[charts.c2Reliability.data.datasets[1].data.length - 1] = val;
+    charts.c2Reliability.update('none');
+}
+
+function updateCpuTelemetry(val) {
+    const isHigh = (val >= 80);
+    updateProgressMeter('vm-cpu', val, isHigh ? 'bg-rose' : 'bg-cyan');
+
+    if (isHigh) {
+        const c2Status = document.getElementById('c2-alert-status');
+        c2Status.textContent = "CRITICAL LIMIT EXCEEDED";
+        c2Status.className = "badge critical";
+        document.getElementById('c2-observability-panel').style.borderColor = "rgba(244, 63, 94, 0.4)";
+
+        document.querySelector('.copilot-mini-body .bubble').innerHTML = `
+            <span class="text-rose font-bold"><i data-lucide="alert-triangle" class="sm-icon"></i> High CPU Load:</span> Web Server VM CPU usage is at **${val}%**! CPU thread queue is saturated, driving request times up.
+        `;
+        lucide.createIcons();
+
+        if (state.activeIncident === 'none') {
+            document.getElementById('env-health-badge').textContent = "Incident Active";
+            document.getElementById('env-health-badge').className = "health-badge anomaly";
+            document.getElementById('active-incidents-count').textContent = "1";
+            document.getElementById('active-incidents-count').className = "status-val text-rose";
+            document.getElementById('active-incident-banner').style.display = "flex";
+            document.getElementById('active-incident-msg').textContent = "Resource Spike: Web VM CPU Load Saturated!";
+            document.getElementById('active-incident-msg').className = "text-rose";
+        }
+    } else {
+        const dtuVal = parseInt(document.getElementById('slider-dtu').value);
+        if (dtuVal < 80) {
+            const c2Status = document.getElementById('c2-alert-status');
+            c2Status.textContent = "ACTIVE MONITORING";
+            c2Status.className = "badge healthy";
+            document.getElementById('c2-observability-panel').style.borderColor = "rgba(255, 255, 255, 0.08)";
+            
+            if (state.activeIncident === 'none') {
+                document.querySelector('.copilot-mini-body .bubble').innerHTML = `
+                    I am analyzing the operations logs. Currently, all systems are **Healthy**. Click on the **Incident Simulator** to test anomalies, or ask me directly about cost, performance, and security.
+                `;
+                lucide.createIcons();
+                checkAndResetEnvironmentHealth();
+            }
+        }
+    }
+
+    charts.c2Reliability.data.datasets[0].data[charts.c2Reliability.data.datasets[0].data.length - 1] = val;
+    charts.c2Reliability.update('none');
+}
+
+function updateAlertsTelemetry(val) {
+    const dashSecVal = document.getElementById('dash-security-val');
+    dashSecVal.textContent = val;
+
+    if (val > 0) {
+        dashSecVal.className = "card-value text-rose";
+        const dashSecIcon = document.getElementById('dash-security-icon');
+        dashSecIcon.className = "text-rose";
+        dashSecIcon.setAttribute('data-lucide', 'shield-alert');
+        
+        const dashSecDesc = document.getElementById('dash-security-desc');
+        dashSecDesc.textContent = `${val} Sentinel Incident${val > 1 ? 's' : ''} Active`;
+        dashSecDesc.className = "text-rose font-semibold";
+
+        const c3Status = document.getElementById('c3-sentinel-status');
+        c3Status.textContent = `${val} SECURITY INCIDENT${val > 1 ? 'S' : ''} DETECTED`;
+        c3Status.className = "badge critical";
+        document.getElementById('c3-alert-box').style.borderColor = "rgba(244, 63, 94, 0.4)";
+        document.getElementById('c3-incident-detail').innerHTML = `
+            <span class="text-rose font-bold">Severity High:</span> Suspicious role assignments detected for identity <span class="font-mono text-white">john.doe@company.com</span> from Stockholm, SE (Unusual Geography).
+        `;
+
+        document.getElementById('suspicious-security-row').style.display = "table-row";
+        document.getElementById('c3-logs-console').textContent = state.incidentLogs.security.join("\n");
+
+        const secRecomIcon = document.getElementById('security-recom-icon');
+        secRecomIcon.setAttribute('data-lucide', 'alert-triangle');
+        secRecomIcon.className = "recom-icon text-rose";
+        
+        const recomBox = document.getElementById('security-recom-box');
+        recomBox.style.borderColor = "rgba(244, 63, 94, 0.3)";
+        recomBox.style.background = "rgba(244, 63, 94, 0.03)";
+        
+        document.getElementById('security-recom-text').innerHTML = `
+            <h5 class="text-rose">Remediation Required (Least Privilege Policy Violations)</h5>
+            <p class="text-sm mt-1 text-gray">
+                <strong>Azure OpenAI Analysis:</strong> User account <span class="font-mono text-white">john.doe@company.com</span> was granted **Owner** permissions but is actively executing network configurations and access policy rewrites outside standard enterprise geolocation.
+            </p>
+            <div class="mt-2 text-xs bg-black-opaque p-2 border-dashed-gray">
+                <strong>Recommended Actions:</strong><br>
+                1. Revoke **Owner** role assignment immediately.<br>
+                2. Assign target-scoped **Network Contributor** permissions only if required.<br>
+                3. Enforce Conditional Access Policies block from Swedish Tor Exits.
+            </div>
+        `;
+
+        document.querySelector('.copilot-mini-body .bubble').innerHTML = `
+            <span class="text-rose font-bold"><i data-lucide="shield-alert" class="sm-icon"></i> Sentinel Security Alert:</span> Suspicious administrative operations logged by **john.doe@company.com** from Stockholm, Sweden. Overprivileged **Owner** role detected. Click **Show security posture anomalies** below to investigate.
+        `;
+
+        if (state.activeIncident === 'none') {
+            document.getElementById('env-health-badge').textContent = "Incident Active";
+            document.getElementById('env-health-badge').className = "health-badge anomaly";
+            document.getElementById('active-incidents-count').textContent = "1";
+            document.getElementById('active-incidents-count').className = "status-val text-rose";
+            document.getElementById('active-incident-banner').style.display = "flex";
+            document.getElementById('active-incident-msg').textContent = "Security Breach: Abnormal RBAC Escalation Active!";
+            document.getElementById('active-incident-msg').className = "text-rose";
+        }
+    } else {
+        dashSecVal.className = "card-value";
+        const dashSecIcon = document.getElementById('dash-security-icon');
+        dashSecIcon.className = "text-green";
+        dashSecIcon.setAttribute('data-lucide', 'shield-check');
+        
+        const dashSecDesc = document.getElementById('dash-security-desc');
+        dashSecDesc.textContent = "No active security alerts";
+        dashSecDesc.className = "text-green";
+
+        const c3Status = document.getElementById('c3-sentinel-status');
+        c3Status.textContent = "0 INCIDENTS TRIGGERED";
+        c3Status.className = "badge healthy";
+        document.getElementById('c3-alert-box').style.borderColor = "rgba(255, 255, 255, 0.08)";
+        document.getElementById('c3-incident-detail').textContent = "All sign-ins and identity operations align with geographical baselines and standard RBAC privileges.";
+        document.getElementById('suspicious-security-row').style.display = "none";
+        
+        const secRecomIcon = document.getElementById('security-recom-icon');
+        secRecomIcon.setAttribute('data-lucide', 'check-shield');
+        secRecomIcon.className = "recom-icon text-green";
+        document.getElementById('security-recom-box').style.borderColor = "rgba(255, 255, 255, 0.08)";
+        document.getElementById('security-recom-box').style.background = "rgba(255, 255, 255, 0.02)";
+        document.getElementById('security-recom-text').innerHTML = `
+            <h5>All Identities Fully Compliant</h5>
+            <p class="text-sm mt-1 text-gray">Azure OpenAI reviewed the activity logs against RBAC maps. Current permissions represent the minimum privileges required for continuous operation.</p>
+        `;
+        document.getElementById('c3-logs-console').textContent = `
+[2026-05-22 11:15:30] SigninLogs - devops-deployer-sp - IP 20.38.104.14 - Low Risk (MFA Succeeded)
+[2026-05-22 11:20:45] AzureActivity - devops-deployer-sp - Update Web App - Status: Succeeded
+[2026-05-22 11:22:10] SigninLogs - sec-auditor-sa - IP 192.168.10.45 - Low Risk (Intranet)
+[2026-05-22 12:05:12] AzureActivity - sec-auditor-sa - List Keys - Status: Succeeded
+        `.trim();
+
+        if (state.activeIncident === 'none') {
+            document.querySelector('.copilot-mini-body .bubble').innerHTML = `
+                I am analyzing the operations logs. Currently, all systems are **Healthy**. Click on the **Incident Simulator** to test anomalies, or ask me directly about cost, performance, and security.
+            `;
+            lucide.createIcons();
+            checkAndResetEnvironmentHealth();
+        }
+    }
+    lucide.createIcons();
+}
+
+function updateSpendTelemetry(val) {
+    charts.c4Cost.data.datasets[0].data[3] = val;
+
+    const isHigh = (val >= 100);
+    const bgColors = Array(8).fill('rgba(245, 158, 11, 0.4)');
+    const borderColors = Array(8).fill('#f59e0b');
+    
+    if (isHigh) {
+        bgColors[3] = 'rgba(244, 63, 94, 0.6)';
+        borderColors[3] = '#f43f5e';
+        charts.c4Cost.data.datasets[0].backgroundColor = bgColors;
+        charts.c4Cost.data.datasets[0].borderColor = borderColors;
+        charts.c4Cost.update('none');
+
+        document.getElementById('orphaned-table-body').innerHTML = `
+            <tr>
+                <td class="font-mono text-rose">disk-prod-replica-01</td>
+                <td>Premium SSD Managed Disk (1024 GB)</td>
+                <td><span class="badge warning">Unattached</span></td>
+                <td class="font-semibold text-white">$122.80 / mo</td>
+            </tr>
+            <tr>
+                <td class="font-mono text-rose">pip-unused-web-02</td>
+                <td>Static Public IP Address</td>
+                <td><span class="badge warning">Unassociated</span></td>
+                <td class="font-semibold text-white">$5.00 / mo</td>
+            </tr>
+            <tr>
+                <td class="font-mono text-rose">vm-test-sandbox-04</td>
+                <td>Standard D4s v3 (Stopped)</td>
+                <td><span class="badge warning">Allocated Disk Only</span></td>
+                <td class="font-semibold text-white">$180.00 / mo</td>
+            </tr>
+        `;
+        document.getElementById('cleanup-runbook-container').style.display = "block";
+
+        document.querySelector('.copilot-mini-body .bubble').innerHTML = `
+            <span class="text-rose font-bold"><i data-lucide="coins" class="sm-icon"></i> Cost Anomaly Detected:</span> A massive spend spike ($${val.toFixed(2)}) occurred! Resource Graph analysis indicates **3 unused/orphaned items** incurring high waste. Cleanup PowerShell runbook generated.
+        `;
+        lucide.createIcons();
+
+        if (state.activeIncident === 'none') {
+            document.getElementById('env-health-badge').textContent = "Incident Active";
+            document.getElementById('env-health-badge').className = "health-badge anomaly";
+            document.getElementById('active-incidents-count').textContent = "1";
+            document.getElementById('active-incidents-count').className = "status-val text-rose";
+            document.getElementById('active-incident-banner').style.display = "flex";
+            document.getElementById('active-incident-msg').textContent = "Cost Anomaly: Significant Resource Cost Leakage!";
+            document.getElementById('active-incident-msg').className = "text-rose";
+        }
+    } else {
+        charts.c4Cost.data.datasets[0].backgroundColor = bgColors;
+        charts.c4Cost.data.datasets[0].borderColor = borderColors;
+        charts.c4Cost.update('none');
+
+        document.getElementById('orphaned-table-body').innerHTML = `
+            <tr class="empty-state">
+                <td colspan="4" class="text-center py-4 text-gray">No unused or orphaned resources found in active subscription.</td>
+            </tr>
+        `;
+        document.getElementById('cleanup-runbook-container').style.display = "none";
+
+        if (state.activeIncident === 'none') {
+            document.querySelector('.copilot-mini-body .bubble').innerHTML = `
+                I am analyzing the operations logs. Currently, all systems are **Healthy**. Click on the **Incident Simulator** to test anomalies, or ask me directly about cost, performance, and security.
+            `;
+            lucide.createIcons();
+            checkAndResetEnvironmentHealth();
+        }
+    }
+}
+
+function updateMemoryTelemetry(val) {
+    charts.c5Forecasting.data.datasets[3].data[charts.c5Forecasting.data.datasets[3].data.length - 1] = val;
+    charts.c5Forecasting.update('none');
+
+    updateProgressMeter('vm-mem', val, (val >= 80) ? 'bg-rose' : 'bg-amber');
+
+    const isOutOfBounds = (val > 55 || val < 35);
+    if (isOutOfBounds) {
+        const status = document.getElementById('c5-deviation-status');
+        status.textContent = "OUT-OF-BOUNDS ANOMALY TRIGGERED";
+        status.className = "badge critical";
+        document.getElementById('c5-forecast-panel').style.borderColor = "rgba(244, 63, 94, 0.4)";
+
+        document.getElementById('c5-insight-box').innerHTML = `
+            <span class="text-rose font-bold">Azure OpenAI Deviation Insight (AutoML Correlation):</span><br>
+            VM metric <span class="font-mono text-white">PercentMemoryUsed</span> has crossed the **99% Confidence Boundary** of the AutoML model. 
+            The actual value (**${val}%**) represents a structural breakout from normal diurnal historical workloads. 
+            This linear climbing pattern with flat CPU utilization is highly typical of a **memory leak in Node.js heap space**.
+        `;
+
+        document.querySelector('.copilot-mini-body .bubble').innerHTML = `
+            <span class="text-rose font-bold"><i data-lucide="trending-up" class="sm-icon"></i> Baseline Deviation:</span> PercentMemoryUsed has broken out of the AutoML time-series confidence bands. Current allocation is **${val}%**, pointing to an active software memory leak.
+        `;
+        lucide.createIcons();
+
+        if (state.activeIncident === 'none') {
+            document.getElementById('env-health-badge').textContent = "Incident Active";
+            document.getElementById('env-health-badge').className = "health-badge anomaly";
+            document.getElementById('active-incidents-count').textContent = "1";
+            document.getElementById('active-incidents-count').className = "status-val text-rose";
+            document.getElementById('active-incident-banner').style.display = "flex";
+            document.getElementById('active-incident-msg').textContent = "Observability Warning: Persistent VM Memory Leakage!";
+            document.getElementById('active-incident-msg').className = "text-rose";
+        }
+    } else {
+        const status = document.getElementById('c5-deviation-status');
+        status.textContent = "WITHIN NORMAL BOUNDS";
+        status.className = "badge healthy";
+        document.getElementById('c5-forecast-panel').style.borderColor = "rgba(255, 255, 255, 0.08)";
+        document.getElementById('c5-insight-box').textContent = `"Telemetry analysis shows CPU and memory patterns perfectly aligned with regular weekday workloads. No unexpected structural breaks or variance leaks detected in the time-series bounds."`;
+
+        if (state.activeIncident === 'none') {
+            document.querySelector('.copilot-mini-body .bubble').innerHTML = `
+                I am analyzing the operations logs. Currently, all systems are **Healthy**. Click on the **Incident Simulator** to test anomalies, or ask me directly about cost, performance, and security.
+            `;
+            lucide.createIcons();
+            checkAndResetEnvironmentHealth();
+        }
+    }
+}
+
+function checkAndResetEnvironmentHealth() {
+    const lat = parseInt(document.getElementById('slider-latency').value);
+    const dtu = parseInt(document.getElementById('slider-dtu').value);
+    const cpu = parseInt(document.getElementById('slider-cpu').value);
+    const alerts = parseInt(document.getElementById('slider-alerts').value);
+    const spend = parseInt(document.getElementById('slider-spend').value);
+    const mem = parseInt(document.getElementById('slider-memory').value);
+
+    const isLatencyAnom = lat >= 400;
+    const isDtuAnom = dtu >= 80;
+    const isCpuAnom = cpu >= 80;
+    const isAlertsAnom = alerts > 0;
+    const isSpendAnom = spend >= 100;
+    const isMemAnom = mem > 55 || mem < 35;
+
+    if (!isLatencyAnom && !isDtuAnom && !isCpuAnom && !isAlertsAnom && !isSpendAnom && !isMemAnom) {
+        document.getElementById('env-health-badge').textContent = "Healthy";
+        document.getElementById('env-health-badge').className = "health-badge healthy";
+        document.getElementById('active-incidents-count').textContent = "0";
+        document.getElementById('active-incidents-count').className = "status-val text-green";
+        document.getElementById('active-incident-banner').style.display = "none";
+    }
 }
 
 function resetComponentsToDefault() {

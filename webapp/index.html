@@ -565,6 +565,58 @@ Write-Host "Cleanup completed successfully!" -ForegroundColor Green</pre>
                     </button>
                 </div>
 
+                <div class="sim-group mt-4 border-top pt-4">
+                    <h5 class="text-cyan"><i data-lucide="sliders-horizontal" class="sm-icon"></i> Live Telemetry Tuners</h5>
+                    
+                    <div class="tuner-row mt-3">
+                        <div class="tuner-label-bar">
+                            <span>App Latency (C1)</span>
+                            <span class="tuner-val text-cyan" id="tuner-latency-val">124 ms</span>
+                        </div>
+                        <input type="range" class="tuner-slider" id="slider-latency" min="50" max="1500" value="124">
+                    </div>
+
+                    <div class="tuner-row mt-3">
+                        <div class="tuner-label-bar">
+                            <span>SQL DB DTU (C2)</span>
+                            <span class="tuner-val text-purple" id="tuner-dtu-val">28%</span>
+                        </div>
+                        <input type="range" class="tuner-slider" id="slider-dtu" min="0" max="100" value="28">
+                    </div>
+
+                    <div class="tuner-row mt-3">
+                        <div class="tuner-label-bar">
+                            <span>VM CPU Load (C2)</span>
+                            <span class="tuner-val text-cyan" id="tuner-cpu-val">14%</span>
+                        </div>
+                        <input type="range" class="tuner-slider" id="slider-cpu" min="0" max="100" value="14">
+                    </div>
+
+                    <div class="tuner-row mt-3">
+                        <div class="tuner-label-bar">
+                            <span>Sentinel Alerts (C3)</span>
+                            <span class="tuner-val text-rose" id="tuner-alerts-val">0</span>
+                        </div>
+                        <input type="range" class="tuner-slider" id="slider-alerts" min="0" max="5" value="0">
+                    </div>
+
+                    <div class="tuner-row mt-3">
+                        <div class="tuner-label-bar">
+                            <span>Daily Spend (C4)</span>
+                            <span class="tuner-val text-amber" id="tuner-spend-val">$21.20</span>
+                        </div>
+                        <input type="range" class="tuner-slider" id="slider-spend" min="10" max="500" value="21">
+                    </div>
+
+                    <div class="tuner-row mt-3">
+                        <div class="tuner-label-bar">
+                            <span>VM Memory (C5)</span>
+                            <span class="tuner-val text-amber" id="tuner-memory-val">45%</span>
+                        </div>
+                        <input type="range" class="tuner-slider" id="slider-memory" min="0" max="100" value="45">
+                    </div>
+                </div>
+
                 <button class="reset-btn mt-6" id="btn-sim-reset">
                     <i data-lucide="refresh-cw"></i> Reset Environment Health
                 </button>
